@@ -41,5 +41,22 @@ pageEncoding="UTF-8"%>
       </div>
 
     </div>
+     <div class="row" style="margin-top: 30px; border: 1px darkgrey solid; border-radius: 10px; width: 50%; margin: 30px auto; padding: 20px">
+        <div class="col-sm-12">
+          <h2 class="my-class">Received Message</h2>
+          <div class="form-group">
+            <label>From:</label>
+            <p class="form-control-static">${emailFrom}</p>
+          </div>
+          <div class="form-group">
+            <label>Subject:</label>
+            <p class="form-control-static">${emailSubject}</p>
+          </div>
+          <div class="form-group">
+            <label>Content:</label>
+            <p class="form-control-static">${emailContent}</p>
+          </div>
+        </div>
+      </div>
   </body>
 </html>

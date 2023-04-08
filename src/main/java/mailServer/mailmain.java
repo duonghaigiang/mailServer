@@ -44,55 +44,68 @@ public class mailmain extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
 	 *      response)
 	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		RequestDispatcher rd = request.getRequestDispatcher("view/mailserver.jsp");
-		rd.forward(request, response);
+	private static class EmailInfo {
+	    String subject;
+	    String from;
+	    String content;
+
+	    public EmailInfo(String subject, String from, String content) {
+	        this.subject = subject;
+	        this.from = from;
+	        this.content = content;
+	    }
 	}
-	private static void fetchEmails(String userName, String password) {
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+	        throws ServletException, IOException {
+	    try {
+	        EmailInfo emailInfo = fetchEmails("duonghaigiang127@gmail.com", "dduwtscxqhzlkfsk");
+
+	        if (emailInfo != null) {
+	            request.setAttribute("emailSubject", emailInfo.subject);
+	            request.setAttribute("emailFrom", emailInfo.from);
+	            request.setAttribute("emailContent", emailInfo.content);
+	        } else {
+	            request.setAttribute("errorMessage", "Unable to fetch email.");
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    RequestDispatcher rd = request.getRequestDispatcher("view/mailserver.jsp");
+	    rd.forward(request, response);
+	}
+	private static EmailInfo  fetchEmails(String userName, String password)  {
 	    try {
 	        Properties properties = new Properties();
 	        properties.put("mail.store.protocol", "imaps"); //Giao thức lưu trữ email (imaps).
 	        properties.put("mail.imap.host", "imap.gmail.com"); //Địa chỉ máy chủ IMAP (imap.gmail.com).
 	        properties.put("mail.imap.ssl.enable", "true"); //Kích hoạt SSL (true).
-	        
 	        properties.put("mail.imap.port", "993");//Cổng kết nối IMAP (993).
 	        properties.put("mail.imaps.ssl.protocols", "TLSv1.2");
 	        properties.put("mail.imaps.timeout", "10000");
-
 	        Session emailSession = Session.getInstance(properties);
 	        Store store = emailSession.getStore("imaps");
 	        store.connect("imap.gmail.com", userName, password);
-
 	        Folder inboxFolder = store.getFolder("INBOX");
 	        inboxFolder.open(Folder.READ_ONLY);
-
 	        Message[] messages = inboxFolder.getMessages();
-	        System.out.println("Total Messages: " + messages.length);
-	      int n =  messages.length;
-	            Message message = messages[n-1];
-	            System.out.println("---------------------------------");
-	            System.out.println("Email " );
-	            System.out.println("Subject: " + message.getSubject());
-	            System.out.println("From: " + message.getFrom()[0]);
-	            System.out.println("Content: " + message.getContent().toString());
-	        
+	        int n = messages.length;
+	        Message message = messages[n - 1];
+
+	        String subject = message.getSubject();
+	        String from = message.getFrom()[0].toString();
+	        String content = message.getContent().toString();
+
 	        inboxFolder.close(false);
 	        store.close();
-	    } catch (MessagingException e) {
-	        e.printStackTrace();
-	    } catch (IOException e) {
+	      
+	        return new EmailInfo(subject, from, content);
+	    } catch (MessagingException | IOException e) {
 	        e.printStackTrace();
 	    }
+	    return null;
 	}
+
 	
-
-
-
-
-
-
 	/**
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
 	 *      response)
@@ -113,6 +126,7 @@ public class mailmain extends HttpServlet {
 				return new PasswordAuthentication(userName, password);
 			}
 		});
+		
 		String emailTo = request.getParameter("to");
 		String emailSubject = request.getParameter("subject");
 		String emailContent = request.getParameter("content"); // Lấy các thông tin email từ yêu cầu người dùng
@@ -123,12 +137,12 @@ public class mailmain extends HttpServlet {
 			message.setSubject(emailSubject);
 			message.setText(emailContent);  // thiết lập các thông tin
 			Transport.send(message);  //gửi email.
-			fetchEmails("duonghaigiang127@gmail.com" , "dduwtscxqhzlkfsk");
-			
+			  doGet(request,  response);
 		} catch (MessagingException e) {
             throw new RuntimeException(e);
-
 		}
+		RequestDispatcher rd = request.getRequestDispatcher("view/mailserver.jsp");
+	    rd.forward(request, response);
 	}
-
 }
+
